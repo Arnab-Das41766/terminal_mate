@@ -75,6 +75,10 @@ CRITICAL RULES:
 5. Use standard command syntax and flags
 6. ** INTELLIGENT SEARCHING **: If the user asks to "find", "search", or "list" files, assume they might need a recursive search (e.g., `dir /s` or `find . -name`) if specific paths aren't given.
 7. ** DESKTOP ACCESS **: If the user mentions "Desktop", they usually mean the parent folder relative to their project. Use `..` or the absolute path to access it.
+8. ** VALID SYNTAX ONLY **: Do NOT use English conjunctions like "OR" or "AND" in commands. Use proper shell syntax for multiple arguments (e.g., `dir *.jpg *.png`, NOT `dir *.jpg OR *.png`).
+
+9. ** WINDOWS SEARCH **: On Windows, use PowerShell for multiple file patterns. Example: `powershell -c "Get-ChildItem -Path '..' -Recurse -Include '*.jpg','*.png' | Select-Object -ExpandProperty FullName"` instead of `dir`.
+10. ** SPECIFICITY **: If the user asks for a specific type (e.g. "images"), do NOT use generic wildcards like `*arnab*`. You MUST search for extensions: `*arnab*.jpg`, `*arnab*.png`.
 
 FORMAT YOUR RESPONSE EXACTLY AS:
 COMMAND: <the actual command here>
@@ -93,7 +97,25 @@ EXPLANATION: Lists files in the parent directory (Desktop).
 Example 3 (Find in Desktop):
 User: find CV in desktop
 COMMAND: dir /s /b "..\*CV*"
-EXPLANATION: Recursively searches for "CV" starting from the Desktop (parent folder)."""
+EXPLANATION: Recursively searches for "CV" starting from the Desktop (parent folder).
+
+Example 4 (Wi-Fi Password):
+User: get wifi password for MyNetwork
+COMMAND: netsh wlan show profile name="MyNetwork" key=clear
+EXPLANATION: Retrieves the saved Wi-Fi profile and shows the password (key content).
+
+Example 5 (Kill Process):
+User: kill chrome
+COMMAND: powershell -c "Stop-Process -Name *chrome* -Force"
+EXPLANATION: Forcefully terminates any process containing "chrome" in its name.
+
+Example 6 (System Info):
+User: what is my ip
+COMMAND: ipconfig
+Example 7 (Open VS Code):
+User: open vs code in this directory
+COMMAND: code .
+EXPLANATION: Opens the current directory in Visual Studio Code (requires 'code' in PATH)."""
     
     def _build_prompt(self, user_input, context):
         """Build the prompt with context"""

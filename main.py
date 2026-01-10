@@ -47,7 +47,8 @@ class TerminalMate:
                 self.process_request(user_input)
                 
             except KeyboardInterrupt:
-                self.console.print("\n[yellow]Use 'exit' or 'quit' to leave[/yellow]")
+                self.console.print("\n[yellow]Goodbye! 👋[/yellow]")
+                self.running = False
             except Exception as e:
                 self.console.print(f"\n[red]Error: {str(e)}[/red]")
     

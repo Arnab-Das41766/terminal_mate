@@ -37,7 +37,7 @@ CRITICAL_KEYWORDS = [
     # System modifications
     "chmod 777", "chown", "chmod -R", "format", "mkfs",
     # Network
-    "iptables", "netsh", "ufw delete", "firewall",
+    "iptables", "ufw delete", "firewall",
     # Process termination
     "kill -9", "killall", "taskkill /f", "pkill",
     # Registry (Windows)

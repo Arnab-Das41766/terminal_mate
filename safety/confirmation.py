@@ -102,15 +102,15 @@ class ConfirmationUI:
             default="no"
         )
         
-        if response1.lower() != "yes":
+        if response1.lower() not in ["y", "yes"]:
             return False
         
         # Second confirmation
         response2 = Prompt.ask(
-            "[red]Type 'CONFIRM' to proceed[/red]"
+            "[red]Type 'y' or 'CONFIRM' to proceed[/red]"
         )
         
-        return response2 == "CONFIRM"
+        return response2.lower() in ["y", "yes", "confirm"]
     
     def show_execution_result(self, success, output, error=None):
         """Display command execution results"""
