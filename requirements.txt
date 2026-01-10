@@ -1,0 +1,4 @@
+ollama>=0.1.0
+rich>=13.7.0
+prompt-toolkit>=3.0.43
+psutil>=5.9.0
