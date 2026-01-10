@@ -13,6 +13,7 @@ sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 
 from core.llm_engine import LLMEngine
 from core.executor import CommandExecutor
+from core.workflow import WorkflowEngine
 from safety.risk_analyzer import RiskAnalyzer
 from safety.confirmation import ConfirmationUI
 import config
@@ -23,6 +24,7 @@ class TerminalMate:
         self.console = Console()
         self.llm = LLMEngine()
         self.executor = CommandExecutor()
+        self.workflow_engine = WorkflowEngine()
         self.risk_analyzer = RiskAnalyzer()
         self.confirmation_ui = ConfirmationUI()
         self.running = True
@@ -142,7 +144,8 @@ Your AI-powered terminal assistant using [bold]Qwen 2.5 Coder[/bold]
             context = {
                 'current_dir': self.executor.get_current_directory(),
                 'os': config.CURRENT_OS,
-                'shell': config.SHELL_TYPE
+                'shell': config.SHELL_TYPE,
+                'app_root': os.path.dirname(os.path.abspath(__file__))
             }
             
             # Generate command using LLM

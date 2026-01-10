@@ -2,6 +2,7 @@
 LLM Engine for interacting with Ollama models
 """
 import ollama
+import os
 import config
 
 
@@ -115,7 +116,12 @@ COMMAND: ipconfig
 Example 7 (Open VS Code):
 User: open vs code in this directory
 COMMAND: code .
-EXPLANATION: Opens the current directory in Visual Studio Code (requires 'code' in PATH)."""
+EXPLANATION: Opens the current directory in Visual Studio Code (requires 'code' in PATH).
+
+Example 8 (Standard Project Setup):
+User: create a new standard project named "MyNewApp"
+COMMAND: mkdir MyNewApp && cd MyNewApp && python -m core.workflow "Standard Project Setup"
+EXPLANATION: Creates the folder, enters it, and runs the standard project setup workflow."""
     
     def _build_prompt(self, user_input, context):
         """Build the prompt with context"""
@@ -130,6 +136,14 @@ EXPLANATION: Opens the current directory in Visual Studio Code (requires 'code' 
                     
             if 'previous_command' in context:
                 prompt += f"Previous command: {context['previous_command']}\n"
+        
+        if "standard project" in user_input.lower():
+            if context and 'app_root' in context:
+                workflow_script = os.path.join(context['app_root'], 'core', 'workflow.py')
+                # Escape backslashes for string usage if needed, or just rely on python string handling
+                prompt += f'\nIMPORTANT: You MUST append `&& python "{workflow_script}" "Standard Project Setup"` after creating and entering the directory. Do NOT just create the folder.'
+            else:
+                prompt += '\nIMPORTANT: You MUST append `&& python -m core.workflow "Standard Project Setup"` after creating and entering the directory.'
         
         return prompt
     
