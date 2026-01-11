@@ -8,6 +8,7 @@ import platform
 LLM_MODEL = "qwen2.5-coder:7b"  # Using your existing Qwen model
 LLM_TEMPERATURE = 0.1  # Low temperature for consistent command generation
 LLM_TIMEOUT = 10  # Seconds to wait for LLM response
+COMMAND_TIMEOUT = 60  # Seconds to wait for command execution (1 minute)
 
 # Platform Detection
 CURRENT_OS = platform.system().lower()  # 'windows', 'linux', 'darwin' (macOS)

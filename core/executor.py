@@ -46,14 +46,20 @@ class CommandExecutor:
             )
             
             # Get output
-            stdout, stderr = process.communicate(timeout=30)
+            stdout, stderr = process.communicate(timeout=config.COMMAND_TIMEOUT)
             
             # Check if command changed directory
             if command.strip().startswith('cd '):
                 self._handle_cd_command(command)
             
+            # Special handling for explorer command which determines success differently
+            # Explorer often returns 1 but works fine if no stderr
+            success = process.returncode == 0
+            if not success and command.strip().lower().startswith('explorer ') and not stderr.strip():
+                success = True
+            
             return {
-                'success': process.returncode == 0,
+                'success': success,
                 'output': stdout.strip(),
                 'error': stderr.strip() if stderr else None,
                 'return_code': process.returncode
@@ -63,7 +69,7 @@ class CommandExecutor:
             return {
                 'success': False,
                 'output': '',
-                'error': 'Command timed out after 30 seconds',
+                'error': f'Command timed out after {config.COMMAND_TIMEOUT} seconds',
                 'return_code': -1
             }
         except Exception as e:

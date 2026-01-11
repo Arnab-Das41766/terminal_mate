@@ -64,7 +64,7 @@ class LLMEngine:
         """Get the system prompt based on current OS and shell"""
         os_info = f"OS: {config.CURRENT_OS}, Shell: {config.SHELL_TYPE}"
         
-        return f"""You are a terminal command generator assistant. Your job is to convert natural language requests into proper terminal commands.
+        return rf"""You are a terminal command generator assistant. Your job is to convert natural language requests into proper terminal commands.
 
 {os_info}
 
@@ -74,12 +74,15 @@ CRITICAL RULES:
 3. Be precise and safe - avoid destructive commands unless explicitly requested
 4. If the request is ambiguous, generate the most likely safe interpretation
 5. Use standard command syntax and flags
-6. ** INTELLIGENT SEARCHING **: If the user asks to "find", "search", or "list" files, assume they might need a recursive search (e.g., `dir /s` or `find . -name`) if specific paths aren't given.
-7. ** DESKTOP ACCESS **: If the user mentions "Desktop", they usually mean the parent folder relative to their project. Use `..` or the absolute path to access it.
-8. ** VALID SYNTAX ONLY **: Do NOT use English conjunctions like "OR" or "AND" in commands. Use proper shell syntax for multiple arguments (e.g., `dir *.jpg *.png`, NOT `dir *.jpg OR *.png`).
+7. ** INTELLIGENT SEARCHING **: If the user asks to "find", "search", or "list" files, assume they might need a recursive search (e.g., `dir /s` or `find . -name`) if specific paths aren't given.
+8. ** PATH RESOLUTION **: ALWAYS use the absolute paths provided in the "SYSTEM PATHS" section (e.g., for Desktop, Downloads) instead of trying to guess relative paths like `..\Desktop`.
+9. ** VALID SYNTAX ONLY **: Do NOT use English conjunctions like "OR" or "AND" in commands. Use proper shell syntax for multiple arguments (e.g., `dir *.jpg *.png`, NOT `dir *.jpg OR *.png`).
 
 9. ** WINDOWS SEARCH **: On Windows, use PowerShell for multiple file patterns. Example: `powershell -c "Get-ChildItem -Path '..' -Recurse -Include '*.jpg','*.png' | Select-Object -ExpandProperty FullName"` instead of `dir`.
 10. ** SPECIFICITY **: If the user asks for a specific type (e.g. "images"), do NOT use generic wildcards like `*arnab*`. You MUST search for extensions: `*arnab*.jpg`, `*arnab*.png`.
+11. ** FUZZY MATCHING **: When searching for a specific filename (e.g., "instruction"), ALWAYS add a wildcard suffix `*` to catch plurals or partial matches (e.g., use `instruction*.*` instead of `instruction.*`).
+12. ** DIRECTORY SEARCH **: If the user specifically asks to find a "folder" or "directory", YOU MUST use `dir /ad` (Attribute Directory) to filter results. Example: `dir /ad /s /b "...\*foldername*"`
+13. ** QUOTE PATHS **: You MUST enclose ALL file paths and directory names in double quotes to handle spaces correctly. Example: `cd "C:\Users\Arnab Das\Desktop"` instead of `cd C:\Users\Arnab Das\Desktop`.
 
 FORMAT YOUR RESPONSE EXACTLY AS:
 COMMAND: <the actual command here>
@@ -127,15 +130,31 @@ EXPLANATION: Creates the folder, enters it, and runs the standard project setup 
         """Build the prompt with context"""
         prompt = f"User request: {user_input}\n"
         
+        # Add standard paths info
+        user_home = os.path.expanduser("~")
+        prompt += f"\nSYSTEM PATHS:\n"
+        prompt += f"Home: {user_home}\n"
+        prompt += f"Downloads: {os.path.join(user_home, 'Downloads')}\n"
+        prompt += f"Desktop: {os.path.join(user_home, 'Desktop')}\n"
+        
         if context:
             if 'current_dir' in context:
                 prompt += f"Current directory: {context['current_dir']}\n"
-                # Add explicit hint about Desktop location
-                if 'Desktop' in context['current_dir']:
-                    prompt += "HINT: You are likely inside a folder on the Desktop. To access the Desktop itself, use '..'.\n"
                     
             if 'previous_command' in context:
                 prompt += f"Previous command: {context['previous_command']}\n"
+            
+            # Add recent history for conversational context
+            if 'recent_history' in context and context['recent_history']:
+                prompt += "\nRECENT CONVERSATION HISTORY:\n"
+                for item in context['recent_history'][-3:]:  # Last 3 items
+                    prompt += f"User: {item['input']}\n"
+                    prompt += f"Command Executed: {item['command']}\n"
+                    if item.get('output'):
+                        # Truncate output if too long
+                        output_snippet = item['output'][:200] + "..." if len(item['output']) > 200 else item['output']
+                        prompt += f"Command Output: {output_snippet}\n"
+                    prompt += "---\n"
         
         if "standard project" in user_input.lower():
             if context and 'app_root' in context:

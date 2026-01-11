@@ -27,6 +27,7 @@ class TerminalMate:
         self.workflow_engine = WorkflowEngine()
         self.risk_analyzer = RiskAnalyzer()
         self.confirmation_ui = ConfirmationUI()
+        self.history = []  # Store recent conversation history
         self.running = True
         
     def start(self):
@@ -145,7 +146,8 @@ Your AI-powered terminal assistant using [bold]Qwen 2.5 Coder[/bold]
                 'current_dir': self.executor.get_current_directory(),
                 'os': config.CURRENT_OS,
                 'shell': config.SHELL_TYPE,
-                'app_root': os.path.dirname(os.path.abspath(__file__))
+                'app_root': os.path.dirname(os.path.abspath(__file__)),
+                'recent_history': self.history
             }
             
             # Generate command using LLM
@@ -168,15 +170,26 @@ Your AI-powered terminal assistant using [bold]Qwen 2.5 Coder[/bold]
         # Show preview and get confirmation
         if self.confirmation_ui.show_command_preview(command_info, risk_info):
             # Execute command
-            self.execute_command(command_info['command'])
+            self.execute_command(command_info['command'], user_input)
         else:
             self.confirmation_ui.show_cancellation()
     
-    def execute_command(self, command):
+    def execute_command(self, command, user_input=""):
         """Execute a confirmed command"""
         with self.console.status("[cyan]⚙️  Executing...[/cyan]"):
             result = self.executor.execute(command)
         
+        # Update history
+        self.history.append({
+            'input': user_input,
+            'command': command,
+            'output': result['output'] or result['error'] or "No output"
+        })
+        
+        # Keep history size manageable
+        if len(self.history) > 5:
+            self.history.pop(0)
+            
         # Show results
         self.confirmation_ui.show_execution_result(
             result['success'],
