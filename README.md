@@ -9,7 +9,7 @@
   - ✅ **SAFE**: Read-only commands run automatically.
   - ⚠️ **CAUTION**: File modifications require confirmation.
   - 🚨 **CRITICAL**: Dangerous operations need explicit approval.
-- **Workflow Automation**: dedicated workflows for common tasks like project setup.
+- **Workflow Automation**: Dedicated workflows for common tasks like project setup.
 - **Cross-Platform**: Works on Windows, macOS, and Linux.
 
 ## 📂 Project Structure
